@@ -73,7 +73,7 @@ function draw() {
   textAlign(LEFT, TOP);
   text("目標分子: " + targetMolecule.formula, 10, 10);
 
-  // 顯示已被拖曳的原子（這段提前到原子區之前）
+  // 顯示已被拖曳的原子
   for (let atom of atoms) {
     fill(atomColors[atom.type]);
     ellipse(atom.x, atom.y, 32, 32);
@@ -103,14 +103,12 @@ function draw() {
     return width - x;
   }
 
-  // 處理雙手
-  for (let i = 0; i < 2; i++) {
+  // 處理單手
+  for (let i = 0; i < handPredictions.length; i++) {
     const hand = handPredictions[i];
     if (hand) {
       const pinching = isPinching(hand);
       let [hx, hy] = handCenter(hand);
-
-      // 鏡像手座標
       hx = mirrorX(hx);
 
       // 畫手部中心
@@ -160,21 +158,6 @@ function draw() {
           pickedAtoms[i] = null;
         }
       }
-    }
-  }
-
-  // 只有當雙手都各自捏住一顆原子時才嘗試鍵結
-  if (pickedAtoms[0] && pickedAtoms[1]) {
-    let a = pickedAtoms[0];
-    let b = pickedAtoms[1];
-    if (
-      dist(a.x, a.y, b.x, b.y) < bondDistance &&
-      !a.bonds.includes(b) &&
-      !b.bonds.includes(a) &&
-      a.type !== b.type
-    ) {
-      a.bonds.push(b);
-      b.bonds.push(a);
     }
   }
 
