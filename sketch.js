@@ -1,90 +1,199 @@
 let video;
-let facemesh;
 let handpose;
-let predictions = [];
 let handPredictions = [];
-let circleIndex = 94;
+let atoms = [];
+let targetMolecule = { formula: "H₂O", structure: ["O", "H", "H"] };
+let pickedAtoms = [null, null]; // [左手, 右手]
+let atomZone = [];
+let atomTypes = ["H", "O", "C"];
+let atomColors = { H: "#00bfff", O: "#ff4d4d", C: "#888888" };
+let bondDistance = 60;
 
 function setup() {
-  createCanvas(640, 480).position(
-    (windowWidth - 640) / 2,
-    (windowHeight - 480) / 2
+  createCanvas(800, 600).position(
+    (windowWidth - 800) / 2,
+    (windowHeight - 600) / 2
   );
   video = createCapture(VIDEO);
   video.size(width, height);
   video.hide();
 
-  facemesh = ml5.facemesh(video, modelReady);
-  facemesh.on('predict', results => {
-    predictions = results;
-  });
-
   handpose = ml5.handpose(video, handModelReady);
   handpose.on('predict', results => {
     handPredictions = results;
   });
-}
 
-function modelReady() {
-  // 臉部模型載入完成
+  // 初始化原子區
+  atomZone = [];
+  for (let i = 0; i < atomTypes.length; i++) {
+    for (let j = 0; j < 3; j++) {
+      atomZone.push({
+        type: atomTypes[i],
+        x: 100 + i * 60,
+        y: 450 + j * 40,
+        held: false,
+        bonds: []
+      });
+    }
+  }
+  atoms = [];
 }
 
 function handModelReady() {
   // 手部模型載入完成
 }
 
-// 根據手部特徵判斷剪刀石頭布
-function detectHandGesture(hand) {
-  if (!hand || !hand.landmarks) return 'paper'; // 預設為布
+// 判斷是否捏合（拇指與食指距離小於閾值）
+function isPinching(hand) {
+  if (!hand || !hand.landmarks) return false;
+  const thumbTip = hand.landmarks[4];
+  const indexTip = hand.landmarks[8];
+  const d = dist(thumbTip[0], thumbTip[1], indexTip[0], indexTip[1]);
+  return d < 40; // 閾值可調整
+}
 
-  // 取得每根手指的末端點
-  const tips = [8, 12, 16, 20]; // 食指、中指、無名指、小指
-  let extended = 0;
-  for (let i = 0; i < tips.length; i++) {
-    // 指尖與指根的y座標比較（簡單判斷是否伸直）
-    if (hand.landmarks[tips[i]][1] < hand.landmarks[tips[i] - 2][1]) {
-      extended++;
-    }
-  }
-  // 大拇指判斷（4號點與2號點x座標）
-  let thumbExtended = hand.landmarks[4][0] > hand.landmarks[3][0];
-
-  // 剪刀：2指伸直
-  if (extended === 2) return 'scissors';
-  // 石頭：0指伸直
-  if (extended === 0) return 'rock';
-  // 布：4指伸直
-  if (extended === 4) return 'paper';
-  // 其他狀況預設為布
-  return 'paper';
+// 取得手的中心點（用於拖曳原子）
+function handCenter(hand) {
+  if (!hand || !hand.landmarks) return [0, 0];
+  const wrist = hand.landmarks[0];
+  const indexTip = hand.landmarks[8];
+  return [
+    (wrist[0] + indexTip[0]) / 2,
+    (wrist[1] + indexTip[1]) / 2
+  ];
 }
 
 function draw() {
   image(video, 0, 0, width, height);
 
-  let gesture = 'paper'; // 預設
+  // 顯示目標分子
+  fill(0);
+  textSize(32);
+  textAlign(LEFT, TOP);
+  text("目標分子: " + targetMolecule.formula, 10, 10);
 
-  if (handPredictions.length > 0) {
-    gesture = detectHandGesture(handPredictions[0]);
-  }
-
-  if (predictions.length > 0) {
-    const keypoints = predictions[0].scaledMesh;
-
-    // 根據手勢決定圓的位置
-    if (gesture === 'scissors') {
-      circleIndex = 10;
-    } else if (gesture === 'rock') {
-      circleIndex = 137;
-    } else if (gesture === 'paper') {
-      circleIndex = 94;
+  // 顯示原子區
+  for (let atom of atomZone) {
+    if (!atom.held) {
+      fill(atomColors[atom.type]);
+      ellipse(atom.x, atom.y, 32, 32);
+      fill(255);
+      textAlign(CENTER, CENTER);
+      text(atom.type, atom.x, atom.y);
     }
-
-    // 取得對應點座標並畫圓
-    const [x, y] = keypoints[circleIndex];
-    noFill();
-    stroke(255, 0, 0);
-    strokeWeight(4);
-    ellipse(x, y, 50, 50);
   }
+
+  // 顯示已被拖曳的原子
+  for (let atom of atoms) {
+    fill(atomColors[atom.type]);
+    ellipse(atom.x, atom.y, 32, 32);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    text(atom.type, atom.x, atom.y);
+    // 畫鍵結
+    for (let bonded of atom.bonds) {
+      stroke(0);
+      line(atom.x, atom.y, bonded.x, bonded.y);
+    }
+  }
+
+  // 處理雙手
+  for (let i = 0; i < 2; i++) {
+    const hand = handPredictions[i];
+    if (hand) {
+      const pinching = isPinching(hand);
+      const [hx, hy] = handCenter(hand);
+
+      // 畫手部中心
+      noStroke();
+      fill(pinching ? "#ff0" : "#0f0");
+      ellipse(hx, hy, 20, 20);
+
+      if (pinching) {
+        // 若已經抓住原子，移動它
+        if (pickedAtoms[i]) {
+          pickedAtoms[i].x = hx;
+          pickedAtoms[i].y = hy;
+        } else {
+          // 檢查是否有原子可抓
+          let found = false;
+          // 先檢查原子區
+          for (let atom of atomZone) {
+            if (!atom.held && dist(hx, hy, atom.x, atom.y) < 24) {
+              atom.held = true;
+              pickedAtoms[i] = {
+                type: atom.type,
+                x: hx,
+                y: hy,
+                held: true,
+                bonds: []
+              };
+              atoms.push(pickedAtoms[i]);
+              found = true;
+              break;
+            }
+          }
+          // 再檢查已拖曳的原子
+          if (!found) {
+            for (let atom of atoms) {
+              if (dist(hx, hy, atom.x, atom.y) < 24 && !atom.held) {
+                atom.held = true;
+                pickedAtoms[i] = atom;
+                break;
+              }
+            }
+          }
+        }
+      } else {
+        // 放下原子
+        if (pickedAtoms[i]) {
+          pickedAtoms[i].held = false;
+          pickedAtoms[i] = null;
+        }
+      }
+    }
+  }
+
+  // 嘗試鍵結
+  for (let i = 0; i < atoms.length; i++) {
+    for (let j = i + 1; j < atoms.length; j++) {
+      let a = atoms[i], b = atoms[j];
+      if (
+        dist(a.x, a.y, b.x, b.y) < bondDistance &&
+        !a.bonds.includes(b) &&
+        !b.bonds.includes(a)
+      ) {
+        // 簡單鍵結規則：不同類型且尚未連結
+        if (a.type !== b.type) {
+          a.bonds.push(b);
+          b.bonds.push(a);
+        }
+      }
+    }
+  }
+
+  // 檢查是否完成目標分子（簡化判斷）
+  if (checkMolecule()) {
+    fill("#0f0");
+    textSize(48);
+    textAlign(CENTER, CENTER);
+    text("完成！", width / 2, height / 2);
+    noLoop();
+  }
+}
+
+// 檢查是否組成目標分子（簡單比對原子數量）
+function checkMolecule() {
+  let counts = {};
+  for (let atom of atoms) {
+    counts[atom.type] = (counts[atom.type] || 0) + 1;
+  }
+  let targetCounts = {};
+  for (let t of targetMolecule.structure) {
+    targetCounts[t] = (targetCounts[t] || 0) + 1;
+  }
+  for (let t in targetCounts) {
+    if (counts[t] !== targetCounts[t]) return false;
+  }
+  return Object.keys(counts).length === Object.keys(targetCounts).length;
 }
