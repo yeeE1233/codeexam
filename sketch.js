@@ -29,7 +29,7 @@ function setup() {
     for (let j = 0; j < 3; j++) {
       atomZone.push({
         type: atomTypes[i],
-        x: 200 + i * 60,
+        x: 100 + i * 60,
         y: 120 + j * 40, // <-- 由 450 改為 120
         held: false,
         bonds: []
@@ -64,7 +64,12 @@ function handCenter(hand) {
 }
 
 function draw() {
+  // 鏡像畫面
+  push();
+  translate(width, 0);
+  scale(-1, 1);
   image(video, 0, 0, width, height);
+  pop();
 
   // 顯示目標分子
   fill(0);
@@ -97,12 +102,20 @@ function draw() {
     }
   }
 
+  // 取得鏡像後的手座標
+  function mirrorX(x) {
+    return width - x;
+  }
+
   // 處理雙手
   for (let i = 0; i < 2; i++) {
     const hand = handPredictions[i];
     if (hand) {
       const pinching = isPinching(hand);
-      const [hx, hy] = handCenter(hand);
+      let [hx, hy] = handCenter(hand);
+
+      // 鏡像手座標
+      hx = mirrorX(hx);
 
       // 畫手部中心
       noStroke();
