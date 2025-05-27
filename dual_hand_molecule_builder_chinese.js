@@ -20,41 +20,33 @@ function setup() {
     createCanvas(640, 480);
     console.log("畫布已創建 (Canvas created)");
 
-    // 1. 創建視訊捕獲 (不進行預先翻轉)
+    // 1. 創建視訊捕獲
     video = createCapture(VIDEO, function(stream) {
-        // 這個回呼在視訊流實際開始時觸發
-        console.log("攝影機影像流已準備好 (Video stream ready - createCapture callback)");
-        console.log("  - video.width (p5):", video.width, "video.height (p5):", video.height);
-        if (video.elt) {
-            console.log("  - video.elt.videoWidth (HTML):", video.elt.videoWidth, "video.elt.videoHeight (HTML):", video.elt.videoHeight);
-        }
+        console.log("攝影機影像流已準備好");
     });
-    video.size(width, height); // 設定 p5.MediaElement 的尺寸
-    video.hide(); // 隱藏原始 HTML video 元素
-    console.log("攝影機設定完成 (Video capture setup complete)");
+    video.size(width, height);
+    video.hide();
 
-    // 2. 初始化 handPose，讓 ml5.js 處理水平翻轉
-    console.log("嘗試載入 HandPose 模型... (Attempting to load HandPose model...)");
+    // 2. 初始化 handPose
+    console.log("嘗試載入 HandPose 模型...");
+    console.log("ml5 version:", ml5.version); // 確認 ml5 是否正確載入
+    console.log("ml5.handPose:", typeof ml5.handPose); // 確認 handPose 是否存在
+
     handPose = ml5.handPose(video, { flipHorizontal: true }, function() {
-        // modelReady 回呼函數
         modelIsReady = true;
-        console.log('HandPose 模型準備就緒！ (HandPose Model Ready!)');
+        console.log('HandPose 模型準備就緒！');
     });
 
-    // 3. 設定 'predict' 事件的監聽器
     handPose.on('predict', function(results) {
         hands = results;
-        // if (hands.length > 0) {
-        //     console.log("偵測到手部: ", hands.length);
-        // }
     });
 
-    // 創建一些可拖動的「原子」佔位符
+    // 創建可拖動物件
     draggables.push({ x: 100, y: 100, color: color(255, 255, 0), draggedByHand: -1, label: 'A' });
     draggables.push({ x: 200, y: 100, color: color(0, 255, 255), draggedByHand: -1, label: 'B' });
     draggables.push({ x: 150, y: 200, color: color(255, 0, 255), draggedByHand: -1, label: 'C' });
     draggables.push({ x: 250, y: 200, color: color(128, 128, 0), draggedByHand: -1, label: 'D' });
-    console.log("可拖動物件已創建 (Draggable objects created)");
+    console.log("可拖動物件已創建");
 }
 
 function draw() {
