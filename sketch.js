@@ -178,6 +178,23 @@ function draw() {
     }
   }
 
+  // 只要有兩顆未連結的原子彼此靠近且類型不同，就自動鍵結
+  for (let i = 0; i < atoms.length; i++) {
+    for (let j = i + 1; j < atoms.length; j++) {
+      let a = atoms[i];
+      let b = atoms[j];
+      if (
+        dist(a.x, a.y, b.x, b.y) < bondDistance &&
+        !a.bonds.includes(b) &&
+        !b.bonds.includes(a) &&
+        a.type !== b.type
+      ) {
+        a.bonds.push(b);
+        b.bonds.push(a);
+      }
+    }
+  }
+
   // 檢查是否完成目標分子（簡化判斷）
   if (checkMolecule()) {
     fill("#0f0");
