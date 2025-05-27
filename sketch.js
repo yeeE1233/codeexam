@@ -72,18 +72,7 @@ function draw() {
   textAlign(LEFT, TOP);
   text("目標分子: " + targetMolecule.formula, 10, 10);
 
-  // 顯示原子區
-  for (let atom of atomZone) {
-    if (!atom.held) {
-      fill(atomColors[atom.type]);
-      ellipse(atom.x, atom.y, 32, 32);
-      fill(255);
-      textAlign(CENTER, CENTER);
-      text(atom.type, atom.x, atom.y);
-    }
-  }
-
-  // 顯示已被拖曳的原子
+  // 顯示已被拖曳的原子（這段提前到原子區之前）
   for (let atom of atoms) {
     fill(atomColors[atom.type]);
     ellipse(atom.x, atom.y, 32, 32);
@@ -94,6 +83,17 @@ function draw() {
     for (let bonded of atom.bonds) {
       stroke(0);
       line(atom.x, atom.y, bonded.x, bonded.y);
+    }
+  }
+
+  // 顯示原子區
+  for (let atom of atomZone) {
+    if (!atom.held) {
+      fill(atomColors[atom.type]);
+      ellipse(atom.x, atom.y, 32, 32);
+      fill(255);
+      textAlign(CENTER, CENTER);
+      text(atom.type, atom.x, atom.y);
     }
   }
 
@@ -154,21 +154,18 @@ function draw() {
     }
   }
 
-  // 嘗試鍵結
-  for (let i = 0; i < atoms.length; i++) {
-    for (let j = i + 1; j < atoms.length; j++) {
-      let a = atoms[i], b = atoms[j];
-      if (
-        dist(a.x, a.y, b.x, b.y) < bondDistance &&
-        !a.bonds.includes(b) &&
-        !b.bonds.includes(a)
-      ) {
-        // 簡單鍵結規則：不同類型且尚未連結
-        if (a.type !== b.type) {
-          a.bonds.push(b);
-          b.bonds.push(a);
-        }
-      }
+  // 只有當雙手都各自捏住一顆原子時才嘗試鍵結
+  if (pickedAtoms[0] && pickedAtoms[1]) {
+    let a = pickedAtoms[0];
+    let b = pickedAtoms[1];
+    if (
+      dist(a.x, a.y, b.x, b.y) < bondDistance &&
+      !a.bonds.includes(b) &&
+      !b.bonds.includes(a) &&
+      a.type !== b.type
+    ) {
+      a.bonds.push(b);
+      b.bonds.push(a);
     }
   }
 
