@@ -58,60 +58,50 @@ function setup() {
 }
 
 function draw() {
-    // 檢查 video 物件和其底層 HTML 元素是否準備好
+    console.log("進入 draw 函數");
+
     if (video && video.elt && video.elt.readyState >= 2 && video.width > 0 && video.height > 0) {
-        // video.elt.readyState >= 2 (HAVE_CURRENT_DATA) 表示當前影格數據至少可用
-        // video.width > 0 (p5.MediaElement) 也表明 p5 這邊認為視訊是有效的
-        image(video, 0, 0, width, height); // 繪製視訊畫面
+        image(video, 0, 0, width, height);
     } else {
-        background(30, 30, 70); // 深色背景表示等待
-        fill(255);
-        textAlign(CENTER, CENTER);
-        textSize(16);
-        if (!video || !video.elt) {
-            text("攝影機物件尚未初始化...", width / 2, height / 2 - 20);
-            text("(Video object not initialized...)", width / 2, height / 2 + 10);
-        } else {
-            text(`等待攝影機畫面載入...
-                   (Waiting for video feed...)
-                   HTML ReadyState: ${video.elt.readyState}
-                   p5 video width: ${video.width}`, width / 2, height / 2);
-        }
-        return; // 如果視訊未完全準備好，暫不執行後續的繪圖和偵測
+        console.log("Video not ready. ReadyState:", video?.elt?.readyState);
+        background(30, 30, 70);
+        return;
     }
 
-    // 只有在模型準備好之後才執行手部偵測相關的繪圖
     if (!modelIsReady) {
-        fill(255, 255, 0);
-        textAlign(LEFT, TOP);
-        text("HandPose 模型載入中...", 10, 10);
-        // 在模型載入完成前，先不執行手部繪製和拖動物件的邏輯
-        // 但我們仍然會繪製 draggables 的初始狀態
+        console.log("HandPose 模型尚未載入");
+        return;
     }
 
-    // 繪製可拖動物件 (即使模型未載入，也顯示它們的初始位置)
     for (let draggable of draggables) {
-        if (draggable.draggedByHand !== -1 && modelIsReady) { // 只有模型準備好才響應拖動
-            stroke(handColors[draggable.draggedByHand % handColors.length]);
-            strokeWeight(4);
-        } else {
-            noStroke();
-        }
+        console.log("繪製 draggable:", draggable);
         fill(draggable.color);
         ellipse(draggable.x, draggable.y, draggableRadius * 2);
-        fill(0);
-        noStroke();
-        textAlign(CENTER, CENTER);
-        textSize(draggableRadius);
-        text(draggable.label, draggable.x, draggable.y);
     }
 
 
     // 如果模型已載入，處理和繪製手部
     if (modelIsReady) {
+        if (!video || !video.elt || video.elt.readyState < 2) {
+            console.error("Video 未準備好，ReadyState:", video?.elt?.readyState);
+            return;
+        }
+
+        if (!modelIsReady) {
+            console.error("HandPose 模型尚未載入");
+            return;
+        }
+
+        if (hands.length === 0) {
+            console.warn("未偵測到任何手部");
+        }
+
         for (let i = 0; i < hands.length; i++) {
-            if (i >= 2) break;
             const hand = hands[i];
+            if (!hand.annotations || !hand.annotations.indexFinger || !hand.annotations.thumb) {
+                console.warn("手部資料不完整，無法處理:", hand);
+                continue;
+            }
 
             // 使用 'annotations' 來獲取關鍵點，這是 ml5.js 0.12.2 handpose 推薦的方式
             // 'annotations' 包含如 'thumb', 'indexFinger' 等部位，每個部位是一個關鍵點陣列
