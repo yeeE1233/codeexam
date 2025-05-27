@@ -43,13 +43,13 @@ function handModelReady() {
   // 手部模型載入完成
 }
 
-// 判斷是否捏合（拇指與食指距離小於閾值）
+// 判斷是否碰觸（拇指與食指距離小於閾值）
 function isPinching(hand) {
   if (!hand || !hand.landmarks) return false;
   const thumbTip = hand.landmarks[4];
   const indexTip = hand.landmarks[8];
   const d = dist(thumbTip[0], thumbTip[1], indexTip[0], indexTip[1]);
-  return d < 40; // 閾值可調整
+  return d < 80; // 閾值由 40 改為 80，碰觸即可
 }
 
 // 取得手的中心點（用於拖曳原子）
