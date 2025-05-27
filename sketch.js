@@ -161,16 +161,17 @@ function draw() {
     }
   }
 
-  // 只要有兩顆未連結的原子彼此靠近且類型不同，就自動鍵結
+  // 只允許 H 和 O 之間自動鍵結
   for (let i = 0; i < atoms.length; i++) {
     for (let j = i + 1; j < atoms.length; j++) {
       let a = atoms[i];
       let b = atoms[j];
+      // 只允許 H-O 鍵結
       if (
         dist(a.x, a.y, b.x, b.y) < bondDistance &&
         !a.bonds.includes(b) &&
         !b.bonds.includes(a) &&
-        a.type !== b.type
+        ((a.type === "H" && b.type === "O") || (a.type === "O" && b.type === "H"))
       ) {
         a.bonds.push(b);
         b.bonds.push(a);
