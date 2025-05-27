@@ -29,7 +29,7 @@ function setup() {
     for (let j = 0; j < 3; j++) {
       atomZone.push({
         type: atomTypes[i],
-        x: 100 + i * 60,
+        x: 350 + i * 60,
         y: 120 + j * 40, // <-- 由 450 改為 120
         held: false,
         bonds: []
@@ -52,11 +52,11 @@ function isPinching(hand) {
   return d < 80; // 閾值由 40 改為 80，碰觸即可
 }
 
-// 取得手的中心點（改用食指指尖座標，較準確）
+// 取得手的中心點（改用大拇指指尖座標）
 function handCenter(hand) {
   if (!hand || !hand.landmarks) return [0, 0];
-  const indexTip = hand.landmarks[8];
-  return [indexTip[0], indexTip[1]];
+  const thumbTip = hand.landmarks[4];
+  return [thumbTip[0], thumbTip[1]];
 }
 
 function draw() {
