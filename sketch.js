@@ -30,7 +30,7 @@ function setup() {
       atomZone.push({
         type: atomTypes[i],
         x: 350 + i * 60,
-        y: 120 + j * 40, // <-- 由 450 改為 120
+        y: 400 + j * 40, // <-- 由 450 改為 120
         held: false,
         bonds: []
       });
