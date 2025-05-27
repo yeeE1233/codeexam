@@ -29,7 +29,7 @@ function setup() {
     for (let j = 0; j < 3; j++) {
       atomZone.push({
         type: atomTypes[i],
-        x: 500 + i * 60,
+        x: 100 + i * 60,
         y: 120 + j * 40, // <-- 由 450 改為 120
         held: false,
         bonds: []
