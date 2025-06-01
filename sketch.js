@@ -54,9 +54,15 @@ function isPinching(hand) {
 
 // 取得手的中心點（改用大拇指指尖座標）
 function handCenter(hand) {
-  if (!hand || !hand.landmarks) return [0, 0];
-  const thumbTip = hand.landmarks[4];
-  return [thumbTip[0], thumbTip[1]];
+  if (!hand || !hand.landmarks || hand.landmarks.length < 10) { // 確保 landmarks[0] 和 landmarks[9] 存在
+    return [0, 0];
+  }
+  const wrist = hand.landmarks[0];
+  const middleFingerMCP = hand.landmarks[9]; // MCP: Metacarpophalangeal joint (掌指關節)
+
+  const centerX = (wrist[0] + middleFingerMCP[0]) / 2;
+  const centerY = (wrist[1] + middleFingerMCP[1]) / 2;
+  return [centerX, centerY];
 }
 
 function draw() {
