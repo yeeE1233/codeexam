@@ -49,7 +49,7 @@ function isPinching(hand) {
   const thumbTip = hand.landmarks[4];
   const indexTip = hand.landmarks[8];
   const d = dist(thumbTip[0], thumbTip[1], indexTip[0], indexTip[1]);
-  return d < 80; // 閾值由 40 改為 80，碰觸即可
+  return d < 50; // 閾值由 40 改為 80，碰觸即可
 }
 
 // 取得手的中心點（改用大拇指指尖座標）
