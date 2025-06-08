@@ -41,7 +41,20 @@ function draw() {
   text(`結果：${resultText}`, 20, 100);
   text(`剩餘時間：${max(0, 20 - timer)} 秒`, 20, 130);
 
+  // 通關畫面與重設功能
   if (gameOver) {
+    fill(0);
+    textSize(32);
+    text("恭喜通關！", width / 2 - 100, height / 2 - 20);
+    text("比出 5 重新開始", width / 2 - 150, height / 2 + 20);
+
+    // 玩家比出五根手指時重設遊戲
+    if (predictions.length > 0) {
+      let fingersUp = countFingers(predictions[0]);
+      if (fingersUp === 5) {
+        resetGame();
+      }
+    }
     return;
   }
 
@@ -151,4 +164,14 @@ function drawKeypoints() {
       ellipse(x, y, 10, 10);
     }
   }
+}
+
+// 重設遊戲功能
+function resetGame() {
+  score = 0;
+  aiMove = "";
+  resultText = "";
+  timer = 0;
+  roundActive = true;
+  gameOver = false;
 }
