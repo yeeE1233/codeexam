@@ -8,6 +8,7 @@ let gameOver = false;
 let aiMove = "";
 let resultText = "";
 let timer = 0;
+let roundActive = true; // 新增：判斷本回合是否可猜拳
 
 function setup() {
   createCanvas(640, 480);
@@ -23,7 +24,7 @@ function setup() {
   });
 
   setInterval(() => {
-    if (!gameOver) timer++;
+    if (!gameOver && roundActive) timer++;
   }, 1000);
 }
 
@@ -33,43 +34,66 @@ function draw() {
 
   drawKeypoints();
 
-  fill(0);
+  fill(0); // 文字顏色改為黑色
   textSize(24);
   text(`分數：${score}/${maxScore}`, 20, 40);
   text(`電腦出：${aiMove}`, 20, 70);
   text(`結果：${resultText}`, 20, 100);
+  text(`剩餘時間：${max(0, 20 - timer)} 秒`, 20, 130);
 
   if (gameOver) {
-    fill(0, 255, 0);
-    textSize(32);
-    text("恭喜通關！", width / 2 - 100, height / 2 - 20);
-    text("比出 5 重新開始", width / 2 - 150, height / 2 + 20);
-
-    if (predictions.length > 0) {
-      let fingersUp = countFingers(predictions[0]);
-      if (fingersUp === 5) {
-        resetGame();
-      }
-    }
     return;
   }
 
-  if (predictions.length > 0 && timer > 3) {
-    let fingersUp = countFingers(predictions[0]);
-    let playerMove = getMoveFromFingers(fingersUp);
-    if (playerMove !== "未知") {
-      aiMove = getRandomMove();
-      resultText = getResult(playerMove, aiMove);
+  // 20秒內偵測玩家手勢並猜拳
+  if (roundActive && timer <= 20) {
+    if (predictions.length > 0) {
+      let fingersUp = countFingers(predictions[0]);
+      let playerMove = getMoveFromFingers(fingersUp);
+      if (playerMove !== "未知") {
+        aiMove = getRandomMove();
+        resultText = getResult(playerMove, aiMove);
 
-      if (resultText === "你贏了！") {
-        score++;
-        if (score >= maxScore) {
-          gameOver = true;
+        if (resultText === "你贏了！") {
+          score++;
+          if (score >= maxScore) {
+            gameOver = true;
+          }
         }
+        roundActive = false; // 本回合結束
       }
-
-      timer = 0;
     }
+  } else if (roundActive && timer > 20) {
+    // 20秒內沒出手勢就自動判定失敗
+    resultText = "超時，請再試一次！";
+    aiMove = "";
+    roundActive = false;
+  }
+
+  // 若本回合結束，按下空白鍵或點擊畫面可進入下一回合
+  if (!roundActive && !gameOver) {
+    fill(0);
+    textSize(20);
+    text("按下空白鍵或點擊畫面進入下一回合", 20, 170);
+  }
+}
+
+function keyPressed() {
+  if (!roundActive && !gameOver && key === ' ') {
+    timer = 0;
+    aiMove = "";
+    resultText = "";
+    roundActive = true;
+  }
+}
+
+// 新增：手機點擊畫面也可進入下一回合
+function mousePressed() {
+  if (!roundActive && !gameOver) {
+    timer = 0;
+    aiMove = "";
+    resultText = "";
+    roundActive = true;
   }
 }
 
@@ -127,12 +151,4 @@ function drawKeypoints() {
       ellipse(x, y, 10, 10);
     }
   }
-}
-
-function resetGame() {
-  score = 0;
-  timer = 0;
-  gameOver = false;
-  resultText = "";
-  aiMove = "";
 }
