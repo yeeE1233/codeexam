@@ -43,7 +43,7 @@ function draw() {
 
   // 通關畫面與重設功能
   if (gameOver) {
-    fill(0);
+    fill(255); // 文字顏色改為白色，避免黑底黑字看不到
     textSize(32);
     text("恭喜通關！", width / 2 - 100, height / 2 - 20);
     text("比出 5 重新開始", width / 2 - 150, height / 2 + 20);
