@@ -33,7 +33,7 @@ function draw() {
 
   drawKeypoints();
 
-  fill(255);
+  fill(0);
   textSize(24);
   text(`分數：${score}/${maxScore}`, 20, 40);
   text(`電腦出：${aiMove}`, 20, 70);
