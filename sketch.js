@@ -34,12 +34,24 @@ function draw() {
 
   drawKeypoints();
 
+  // 教育元素：規則說明
+  fill(255, 255, 0);
+  textSize(16);
+  text("規則：\n石頭贏剪刀\n剪刀贏布\n布贏石頭", width - 180, 30);
+
   fill(0); // 文字顏色改為黑色
   textSize(24);
   text(`分數：${score}/${maxScore}`, 20, 40);
   text(`電腦出：${aiMove}`, 20, 70);
   text(`結果：${resultText}`, 20, 100);
   text(`剩餘時間：${max(0, 20 - timer)} 秒`, 20, 130);
+
+  // 教育元素：顯示勝負原因
+  if (resultText && aiMove && !gameOver && !roundActive) {
+    fill(0, 102, 255);
+    textSize(18);
+    text(getReasonText(resultText, aiMove), 20, 150);
+  }
 
   // 通關畫面與重設功能
   if (gameOver) {
@@ -164,6 +176,22 @@ function drawKeypoints() {
       ellipse(x, y, 10, 10);
     }
   }
+}
+
+// 新增：勝負原因說明
+function getReasonText(result, aiMove) {
+  if (result === "平手！") return "雙方出一樣，平手！";
+  if (result === "你贏了！") {
+    if (aiMove === "剪刀") return "石頭贏剪刀，因為石頭可以砸碎剪刀。";
+    if (aiMove === "布") return "剪刀贏布，因為剪刀可以剪斷布。";
+    if (aiMove === "石頭") return "布贏石頭，因為布可以包住石頭。";
+  }
+  if (result === "你輸了！") {
+    if (aiMove === "剪刀") return "剪刀贏布，因為剪刀可以剪斷布。";
+    if (aiMove === "布") return "布贏石頭，因為布可以包住石頭。";
+    if (aiMove === "石頭") return "石頭贏剪刀，因為石頭可以砸碎剪刀。";
+  }
+  return "";
 }
 
 // 重設遊戲功能
