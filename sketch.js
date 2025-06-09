@@ -29,7 +29,7 @@ function setup() {
 }
 
 function draw() {
-  background(0);
+  background(100, 149, 237); // 設定為淡藍色背景 (可依需求調整RGB)
   image(video, 0, 0, width, height);
 
   drawKeypoints();
