@@ -29,38 +29,28 @@ function setup() {
 }
 
 function draw() {
-  background(100, 149, 237); // 設定為淡藍色背景
+  background(0);
   image(video, 0, 0, width, height);
-
-  // 左上角遮罩（分數、電腦出、結果、時間）
-  fill(255, 255, 255, 180); // 白色，透明度180/255
-  noStroke();
-  rect(10, 20, 260, 130, 20); // x, y, w, h, 圓角
-
-  // 右上角遮罩（規則說明）
-  fill(255, 255, 255, 180);
-  noStroke();
-  rect(width - 200, 20, 190, 80, 20);
 
   drawKeypoints();
 
   // 教育元素：規則說明
-  fill(255, 165, 0);
+  fill(255, 255, 0);
   textSize(16);
-  text("規則：\n石頭贏剪刀\n剪刀贏布\n布贏石頭", width - 180, 40);
+  text("規則：\n石頭贏剪刀\n剪刀贏布\n布贏石頭", width - 180, 30);
 
   fill(0); // 文字顏色改為黑色
   textSize(24);
-  text(`分數：${score}/${maxScore}`, 20, 50);
-  text(`電腦出：${aiMove}`, 20, 80);
-  text(`結果：${resultText}`, 20, 110);
-  text(`剩餘時間：${max(0, 20 - timer)} 秒`, 20, 140);
+  text(`分數：${score}/${maxScore}`, 20, 40);
+  text(`電腦出：${aiMove}`, 20, 70);
+  text(`結果：${resultText}`, 20, 100);
+  text(`剩餘時間：${max(0, 20 - timer)} 秒`, 20, 130);
 
   // 教育元素：顯示勝負原因
   if (resultText && aiMove && !gameOver && !roundActive) {
     fill(0, 102, 255);
     textSize(18);
-    text(getReasonText(resultText, aiMove), 20, 170);
+    text(getReasonText(resultText, aiMove), 20, 150);
   }
 
   // 通關畫面與重設功能
